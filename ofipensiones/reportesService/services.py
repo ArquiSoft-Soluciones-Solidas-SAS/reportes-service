@@ -86,7 +86,7 @@ def obtener_cuentas_por_cobrar(nombre_institucion, mes):
 
     # Ejecutar el pipeline
     resultados = db["recibo_cobro"].aggregate(pipeline)
-    r.set(key, json.dumps(resultados), ex=60 * 60 * 24)
+    r.set(key, json.dumps(list(resultados)), ex=60 * 60 * 24)
 
     #de los resultados, solo se necesitan aquellos con el mes solicitado
     processed_rows = [
