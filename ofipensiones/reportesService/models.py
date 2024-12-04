@@ -54,6 +54,7 @@ class CronogramaBase(Document):
         return self.nombre
 
 class ReciboCobro(Document):
+    id = fields.IntField(primary_key=True)  # Usamos un campo entero como primary key
     fecha = fields.DateTimeField()
     nmonto = fields.DecimalField(max_digits=10, decimal_places=2)
     detalle = fields.StringField(max_length=100)
@@ -67,6 +68,7 @@ class ReciboCobro(Document):
         return f"Recibo {self.id} - {self.nmonto}"
 
 class ReciboPago(Document):
+    id = fields.IntField(primary_key=True)  # Usamos un campo entero como primary key
     recibo_cobro = fields.ReferenceField(ReciboCobro)
     fecha = fields.DateTimeField()
     nmonto = fields.DecimalField(max_digits=10, decimal_places=2)

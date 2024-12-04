@@ -89,7 +89,7 @@ def callback(ch, method, properties, body):
     elif method.exchange == 'recibos_cobro' and method.routing_key == 'recibo.cobro.created':
         # Guardar en la base de datos ReciboCobro
         recibo_data = message.get("data")
-        ReciboCobro.objects(id=recibo_data.get("id")).update(
+        ReciboCobro.objects(id=int(recibo_data.get("id"))).update(
             set__fecha=recibo_data.get("fecha"),
             set__nmonto=recibo_data.get("nmonto"),
             set__detalle=recibo_data.get("detalle"),
@@ -115,7 +115,7 @@ def callback(ch, method, properties, body):
             set__nmonto=recibo_pago_data.get("nmonto"),
             set__detalle=recibo_pago_data.get("detalle"),
             set__recibo_cobro=ReciboCobro(
-                id=recibo_pago_data.get("recibo_cobro").get("id"),
+                id=int(recibo_pago_data.get("recibo_cobro").get("id")),
                 fecha=recibo_pago_data.get("recibo_cobro").get("fecha"),
                 nmonto=recibo_pago_data.get("recibo_cobro").get("nmonto"),
                 detalle=recibo_pago_data.get("recibo_cobro").get("detalle"),
