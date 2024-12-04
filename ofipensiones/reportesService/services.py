@@ -12,7 +12,7 @@ from decimal import Decimal
 from mongoengine.queryset.visitor import Q
 
 
-def obtener_cuentas_por_cobrar(request, nombre_institucion, mes):
+def obtener_cuentas_por_cobrar(nombre_institucion, mes):
     print("Hit the DB")
     print("Ejecutando la función..., con los parámetros: ", nombre_institucion, mes)
     try:
