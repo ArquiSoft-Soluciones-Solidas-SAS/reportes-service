@@ -83,8 +83,23 @@ def obtener_cuentas_por_cobrar(nombre_institucion, mes):
     # Ejecutar el pipeline
     resultados = db["recibo_cobro"].aggregate(pipeline)
 
-    # Convertir a lista
-    return list(resultados)
+    #de los resultados, solo se necesitan aquellos con el mes solicitado
+    processed_rows = [
+        {
+            "monto_recibo": row["monto_recibo"],
+            "mes": row["mes"],
+            "valor_detalle": row["valor_detalle"],
+            "estudiante_id": row["estudiante_id"],
+            "nombre_estudiante": row["nombre_estudiante"],
+            "nombre_grado": row["nombre_grado"],
+            "nombre_institucion": row["nombre_institucion"],
+            "nombre_concepto": row["nombre_concepto"],
+            "codigo": row["codigo"]
+        }
+        for row in resultados if row["mes"] == mes
+    ]
+
+    return processed_rows
 
 
 
