@@ -57,7 +57,7 @@ class ReciboCobro(Document):
     id = fields.IntField(primary_key=True)  # Usamos un campo entero como primary key
     fecha = fields.DateTimeField()
     nmonto = fields.DecimalField(max_digits=10, decimal_places=2)
-    detalle = fields.StringField(max_length=100)
+    detalle = fields.StringField(max_length=255)
     estudiante = fields.ReferenceField(Estudiante)
     detalles_cobro = fields.ListField(fields.EmbeddedDocumentField(DetalleCobroCurso))
 
@@ -72,7 +72,7 @@ class ReciboPago(Document):
     recibo_cobro = fields.ReferenceField(ReciboCobro)
     fecha = fields.DateTimeField()
     nmonto = fields.DecimalField(max_digits=10, decimal_places=2)
-    detalle = fields.StringField(max_length=100)
+    detalle = fields.StringField(max_length=255)
 
     def __str__(self):
         return f"Recibo Pago {self.id} - {self.nmonto}"
