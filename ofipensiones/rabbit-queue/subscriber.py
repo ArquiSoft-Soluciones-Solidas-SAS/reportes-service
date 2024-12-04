@@ -93,7 +93,7 @@ def callback(ch, method, properties, body):
             set__fecha=recibo_data.get("fecha"),
             set__nmonto=recibo_data.get("nmonto"),
             set__detalle=recibo_data.get("detalle"),
-            set__estudianteId=recibo_data.get("estudianteId"),
+            set__estudiante=recibo_data.get("estudianteId"),
             set__detalles_cobro=[
                 DetalleCobroCurso(
                     id=detalle.get("id"),
@@ -119,7 +119,7 @@ def callback(ch, method, properties, body):
                 fecha=recibo_pago_data.get("recibo_cobro").get("fecha"),
                 nmonto=recibo_pago_data.get("recibo_cobro").get("nmonto"),
                 detalle=recibo_pago_data.get("recibo_cobro").get("detalle"),
-                estudianteId=recibo_pago_data.get("recibo_cobro").get("estudianteId"),
+                estudiante=recibo_pago_data.get("recibo_cobro").get("estudianteId"),
                 detalles_cobro=[
                     DetalleCobroCurso(
                         id=detalle.get("id"),
