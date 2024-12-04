@@ -30,28 +30,34 @@ def obtener_cuentas_por_cobrar(nombre_institucion, mes):
         cronogramas = CronogramaBase.objects.filter(
             nombreInstitucion=nombre_institucion
         ).only("id", "detalle_cobro")
+        print("Cronogramas: ", cronogramas)
 
         # Filtrar estudiantes de la institución
         estudiantes = Estudiante.objects.filter(
             nombreInstitucion=nombre_institucion
         ).only("id", "cursoEstudianteId", "nombreEstudiante")
+        print("Estudiantes: ", estudiantes)
 
         # Filtrar recibos de cobro asociados a los estudiantes y al mes
         recibos = ReciboCobro.objects.filter(
-            estudiante__in=estudiantes,
+            estudiante__in=estudiantes.id,
             detalles_cobro__mes=mes
         ).only("id", "nmonto", "detalles_cobro", "estudiante")
+        print("Recibos: ", recibos)
 
         # Identificar los recibos que ya tienen pagos asociados
         recibos_pagados = ReciboPago.objects.filter(
             recibo_cobro__in=recibos
         )
+        print("Recibos pagados: ", recibos_pagados)
 
         # Extraer los IDs de los recibos pagados
         recibos_pagados_ids = [recibo.recibo_cobro.id for recibo in recibos_pagados]
+        print("Recibos pagados IDs: ", recibos_pagados_ids)
 
         # Filtrar los recibos que aún no han sido pagados
         recibos_no_pagados = recibos.exclude(id__in=recibos_pagados_ids)
+        print("Recibos no pagados: ", recibos_no_pagados)
 
         processed_rows = []
 
