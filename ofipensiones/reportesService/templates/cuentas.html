@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valor Cuentas por Cobrar</title>
+    <style>
+        .rojo {
+            color: red;
+        }
+        .verde {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <h1>Valor de Cuentas por Cobrar</h1>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Institución</th>
+                <th>Mes</th>
+                <th>Valor deuda</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if cartera_general %}
+                {% for cartera in cartera_general %}
+                    <tr>
+                        <td>{{ cartera.institucion }}</td> 
+                        <td>{{ cartera.mes }}</td> <!-- mes -->
+                        <td class="{% if cartera.total_deuda > 1000000 %}rojo{% else %}verde{% endif %}">
+                            {{ cartera.total_deuda }}
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="8">No se encontraron resultados.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Cuentas por Cobrar</title>
+</head>
+<body>
+<h1>Reporte de Cuentas por Cobrar</h1>
+
+<table border="1">
+    <thead>
+    <tr>
+        <th>Monto Recibo</th>
+        <th>Mes</th>
+        <th>Valor Detalle</th>
+        <th>Estudiante</th>
+        <th>Grado</th>
+        <th>Institución</th>
+        <th>Concepto</th>
+        <th>Código</th>
+        <th>Listado de pagos</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% if cuentas_por_cobrar %}
+        {% for cuenta in cuentas_por_cobrar %}
+            <tr>
+                <td>{{ cuenta.monto_recibo }}</td> <!-- monto_recibo -->
+                <td>{{ cuenta.mes }}</td> <!-- mes -->
+                <td>{{ cuenta.valor_detalle }}</td> <!-- valor_detalle -->
+                <td>{{ cuenta.estudiante_id }} - {{ cuenta.nombre_estudiante }}</td>
+                <!-- estudiante_id y nombre_estudiante -->
+                <td>{{ cuenta.nombre_grado }}</td> <!-- nombre_grado -->
+                <td>{{ cuenta.nombre_institucion }}</td> <!-- nombre_institucion -->
+                <td>{{ cuenta.nombre_concepto }}</td> <!-- nombre_concepto -->
+                <td>{{ cuenta.codigo }}</td> <!-- código -->
+                <td>
+                    <!-- Botón para redirigir al listado de pagos del estudiante -->
+                    <a href="{% url 'manejador_facturacion:listado_conceptos_pago' cuenta.estudiante_id %}">
+                        <button>Ver listado de pagos</button>
+                    </a>
+                </td> <!-- Acción con el botón -->
+            </tr>
+        {% endfor %}
+    {% else %}
+        <tr>
+            <td colspan="8">No se encontraron resultados.</td>
+        </tr>
+    {% endif %}
+    </tbody>
+</table>
+</body>
+</html>
