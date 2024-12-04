@@ -144,5 +144,5 @@ CQRS = {
     'port': 5672,
     'user': 'microservicios_user',
     'password': 'password',
-    'queue': 'cqrs_replica',  # settings used only in replica
+    'rabbit-queue': 'cqrs_replica',  # settings used only in replica
 }
