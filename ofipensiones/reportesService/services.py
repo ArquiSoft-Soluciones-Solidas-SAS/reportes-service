@@ -12,34 +12,47 @@ from decimal import Decimal
 from mongoengine.queryset.visitor import Q
 
 
+from django.http import JsonResponse
+from django.db.models import Q
+
 def obtener_cuentas_por_cobrar(nombre_institucion, mes):
+    """
+    Obtiene las cuentas por cobrar para una institución en un mes específico.
+    """
     print("Hit the DB")
     print("Ejecutando la función..., con los parámetros: ", nombre_institucion, mes)
-    try:
-        # Obtener los recibos de cobro no pagados
-        recibos_pagados_ids = ReciboPago.objects.distinct("recibo_cobro")
-        print("Recibos pagados: ", recibos_pagados_ids)
 
+    try:
+        # Filtrar cronogramas base de la institución
+        cronogramas = CronogramaBase.objects.filter(
+            nombreInstitucion=nombre_institucion
+        ).only("id", "detalle_cobro")
+
+        # Filtrar estudiantes de la institución
+        estudiantes = Estudiante.objects.filter(
+            nombreInstitucion=nombre_institucion
+        ).only("id", "cursoEstudianteId", "nombreEstudiante")
+
+        # Filtrar recibos de cobro asociados a los estudiantes y al mes
         recibos = ReciboCobro.objects.filter(
-            Q(detalles_cobro__mes=mes) &
-            Q(id__nin=recibos_pagados_ids)
-        )
-        print("Recibos: ", recibos)
+            estudiante__in=estudiantes,
+            detalles_cobro__mes=mes
+        ).only("id", "nmonto", "detalles_cobro", "estudiante")
+
+        # Identificar los recibos que ya tienen pagos asociados
+        recibos_pagados_ids = ReciboPago.objects.filter(
+            recibo_cobro__in=recibos
+        ).values_list("recibo_cobro_id", flat=True)
+
+        # Filtrar los recibos que aún no han sido pagados
+        recibos_no_pagados = recibos.exclude(id__in=recibos_pagados_ids)
 
         processed_rows = []
 
-        for recibo in recibos:
-            # Obtener el estudiante relacionado
-            estudiante = Estudiante.objects.get(id=recibo.estudiante)
-
-            # Validar institución
-            if estudiante.nombreInstitucion != nombre_institucion:
-                continue
-
-            # Obtener el curso relacionado
+        for recibo in recibos_no_pagados:
+            estudiante = Estudiante.objects.get(id=recibo.estudiante.id)
             curso = Curso.objects.get(id=estudiante.cursoEstudianteId)
 
-            # Obtener el cronograma relacionado
             for detalle in recibo.detalles_cobro:
                 if detalle.mes == mes:
                     cronograma = CronogramaBase.objects.get(detalle_cobro__id=detalle.id)
@@ -59,12 +72,9 @@ def obtener_cuentas_por_cobrar(nombre_institucion, mes):
         return JsonResponse(processed_rows, safe=False)
 
     except Exception as e:
+        print(f"Error al obtener cuentas por cobrar: {e}")
         return JsonResponse({"error": str(e)}, status=500)
 
-        return JsonResponse(processed_rows, safe=False)
-
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
 
 
 def obtener_cartera_general(nombre_institucion, mes):
