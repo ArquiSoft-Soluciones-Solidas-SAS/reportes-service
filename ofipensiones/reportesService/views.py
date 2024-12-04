@@ -22,6 +22,7 @@ def generar_reporte(request, nombre_institucion, mes):
         mes_con_espacios = mes.replace('_', ' ')
 
         try:
+            print("Obteniendo cuentas por cobrar: ", nombre_institucion_con_espacios, mes_con_espacios)
             cuentas_por_cobrar = obtener_cuentas_por_cobrar(nombre_institucion_con_espacios, mes_con_espacios)
             print("Datos obtenidos de la función:", cuentas_por_cobrar)
             # r.set(key, json.dumps(cuentas_por_cobrar), ex=60 * 60 * 24)

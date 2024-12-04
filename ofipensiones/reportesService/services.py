@@ -13,6 +13,8 @@ from mongoengine.queryset.visitor import Q
 
 
 def obtener_cuentas_por_cobrar(request, nombre_institucion, mes):
+    print("Hit the DB")
+    print("Ejecutando la función..., con los parámetros: ", nombre_institucion, mes)
     try:
         # Obtener los recibos de cobro no pagados
         recibos_pagados_ids = ReciboPago.objects.distinct("recibo_cobro")
