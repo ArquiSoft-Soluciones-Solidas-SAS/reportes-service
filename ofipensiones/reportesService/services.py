@@ -1,64 +1,90 @@
-from django.db.models import Q
-from datetime import date, timedelta
-
-from django.http import JsonResponse
+from .models import Curso, DetalleCobroCurso, ReciboCobro, ReciboPago, Institucion, Estudiante, CronogramaBase
 from pymongo import MongoClient
 
-from .models import Curso, DetalleCobroCurso, ReciboCobro, ReciboPago, Institucion, Estudiante, CronogramaBase
-from mongoengine import Q
-
-
 def obtener_cuentas_por_cobrar(nombre_institucion, mes):
-    # 1. Filtrar cronogramas base por institución y obtener IDs relevantes
-    cronogramas = CronogramaBase.objects(nombreInstitucion=nombre_institucion)
-    curso_ids = [cronograma.cursoId for cronograma in cronogramas]
+    print("Ejecutando consulta...")
 
-    # 2. Filtrar estudiantes por institución y cursos
-    estudiantes = Estudiante.objects(
-        Q(nombreInstitucion=nombre_institucion) & Q(cursoEstudianteId__in=curso_ids)
-    )
+    # Conexión a la base de datos
+    client = MongoClient('mongodb://microservicios_user:password@10.128.0.87:27017')
+    db = client['reportes-query-service']
 
-    # 3. Obtener recibos de cobro de los estudiantes y filtrar por mes en detalles_cobro
-    recibos = ReciboCobro.objects(
-        Q(estudiante__in=[estudiante.id for estudiante in estudiantes]) &
-        Q(detalles_cobro__mes=mes)
-    )
+    # Pipeline
+    pipeline = [
+        {
+            "$lookup": {
+                "from": "recibo_pago",
+                "localField": "_id",
+                "foreignField": "recibo_cobro",
+                "as": "pagos"
+            }
+        },
+        {
+            "$match": {
+                "pagos": {"$size": 0}
+            }
+        },
+        {
+            "$lookup": {
+                "from": "estudiante",
+                "localField": "estudiante",
+                "foreignField": "_id",
+                "as": "estudiante"
+            }
+        },
+        {"$unwind": "$estudiante"},
+        {
+            "$lookup": {
+                "from": "institucion",
+                "localField": "estudiante.institucionEstudianteId",
+                "foreignField": "_id",
+                "as": "institucion"
+            }
+        },
+        {"$unwind": "$institucion"},
+        {
+            "$match": {
+                "institucion.nombreInstitucion": nombre_institucion
+            }
+        },
+        {"$unwind": "$detalles_cobro"},
+        {
+            "$lookup": {
+                "from": "cronograma_base",
+                "let": {"detalleId": "$detalles_cobro._id"},
+                "pipeline": [
+                    {
+                        "$match": {
+                            "$expr": {
+                                "$in": ["$$detalleId", "$detalle_cobro._id"]
+                                }
+                        }
+                    }
+                ],
+                "as": "cronograma"
+            }
+        },
+        {"$unwind": "$cronograma"},
+        {
+            "$project": {
+                "monto_recibo": {"$toDouble": "$nmonto"},
+                "mes": "$detalles_cobro.mes",
+                "valor_detalle": {"$toDouble": "$detalles_cobro.valor"},
+                "estudiante_id": {"$toString": "$estudiante._id"},
+                "nombre_estudiante": "$estudiante.nombreEstudiante",
+                "nombre_grado": "$cronograma.grado",
+                "nombre_institucion": "$institucion.nombreInstitucion",
+                "nombre_concepto": "$cronograma.nombre",
+                "codigo": "$cronograma.codigo"
+            }
+        }
+    ]
+    print("Pipeline: ", pipeline)
 
-    cuentas_por_cobrar = []
+    # Ejecutar el pipeline
+    resultados = db["recibo_cobro"].aggregate(pipeline)
 
-    for recibo in recibos:
-        # Calcular el monto total del recibo
-        monto_total = sum(detalle.valor for detalle in recibo.detalles_cobro if detalle.mes == mes)
-
-        # Obtener pagos realizados para este recibo
-        pagos = ReciboPago.objects(recibo_cobro=recibo)
-
-        # Calcular el monto pagado
-        monto_pagado = sum(pago.nmonto for pago in pagos)
-
-        # Calcular saldo pendiente
-        saldo_pendiente = monto_total - monto_pagado
-
-        # Construir el resultado
-        cuentas_por_cobrar.append({
-            "monto_recibo": monto_total,
-            "mes": mes,
-            "valor_detalle": saldo_pendiente,
-            "estudiante_id": recibo.estudiante,
-            "nombre_estudiante": next(
-                (e.nombreEstudiante for e in estudiantes if e.id == recibo.estudiante),
-                "Desconocido"
-            ),
-            "nombre_grado": next(
-                (c.grado for c in cronogramas if c.cursoId in curso_ids),
-                "Desconocido"
-            ),
-            "nombre_institucion": nombre_institucion,
-            "nombre_concepto": recibo.detalle,
-            "codigo": recibo.id,
-        })
-
-    return cuentas_por_cobrar
+    # Convertir a lista
+    return list(resultados)
 
 
 
