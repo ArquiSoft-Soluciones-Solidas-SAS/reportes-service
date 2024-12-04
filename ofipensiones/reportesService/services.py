@@ -31,7 +31,7 @@ def obtener_cuentas_por_cobrar(nombre_institucion, mes):
         # Filtrar recibos no pagados
         {
             "$match": {
-                "pagos": {"$eq": []}
+                "pagos": {"$size": 0}
             }
         },
         # Lookup para obtener detalles del estudiante
@@ -40,33 +40,43 @@ def obtener_cuentas_por_cobrar(nombre_institucion, mes):
                 "from": "estudiante",
                 "localField": "estudiante",
                 "foreignField": "_id",
-                "as": "estudiante_info"
+                "as": "estudiante"
             }
         },
-        {"$unwind": "$estudiante_info"},
+        {"$unwind": "$estudiante"},
         # Filtrar por nombre de la institución
         {
+            "$lookup": {
+                "from": "institucion",
+                "localField": "estudiante.institucionEstudianteId",
+                "foreignField": "_id",
+                "as": "institucion"
+            }
+        },
+        {"$unwind": "$institucion"},
+        {
             "$match": {
-                "estudiante_info.nombreInstitucion": nombre_institucion
+                "institucion.nombreInstitucion": nombre_institucion
             }
         },
         # Lookup para obtener detalles del cronograma base
         {
             "$lookup": {
                 "from": "cronograma_base",
-                "localField": "detalles_cobro.cronograma_curso_id",  # Asegúrate de que este campo sea correcto
-                "foreignField": "_id",
-                "as": "cronograma_info"
-            }
-        },
-        {"$unwind": "$cronograma_info"},
-        # Filtrar por el mes en detalles de cobro
-        {
-            "$match": {
-                "detalles_cobro.mes": mes
-            }
-        },
-        # Proyecto final para devolver la estructura requerida
+                "let": { "detalleId": "$detalles_cobro._id" },
+                "pipeline": [
+                {
+                    "$match": {
+                        "$expr": {
+                            "$in": ["$$detalleId", "$detalle_cobro._id"]
+                        }
+                    }
+                }
+            ],
+            "as": "cronograma"
+        }
+    },
+        { "$unwind": "$cronograma" }, 
         {
             "$project": {
                 "monto_recibo": {"$toDouble": "$nmonto"},
