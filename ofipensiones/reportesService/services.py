@@ -1,8 +1,6 @@
 from django.db.models import Q
 from datetime import date, timedelta
 
-from pymongo import MongoClient
-
 from .models import Curso, DetalleCobroCurso, ReciboCobro, ReciboPago, Institucion, Estudiante, CronogramaBase
 
 from django.db import connection
@@ -13,80 +11,51 @@ from mongoengine.queryset.visitor import Q
 def obtener_cuentas_por_cobrar(nombre_institucion, mes):
     print("Hit the DB")
 
-    client = MongoClient('mongodb://microservicios_user:password@10.128.0.87:27017')
-    db = client['reportes-query-service']
+    # Filtrar los cronogramas base de la institución
+    cronogramas = CronogramaBase.objects.filter(
+        nombreInstitucion=nombre_institucion
+    ).only("id", "detalle_cobro", "nombre", "codigo")
 
-    resultados = db["recibo_cobro"].aggregate([
-        # Lookup para recibos pagos
-        {
-            "$lookup": {
-                "from": "recibopago",
-                "localField": "_id",
-                "foreignField": "recibo_cobro",
-                "as": "pagos"
-            }
-        },
-        # Filtrar recibos no pagados y detalles para el mes e institución
-        {
-            "$match": {
-                "pagos": {"$eq": []},
-                "detalles_cobro.mes": mes
-            }
-        },
-        # Lookup para obtener detalles del estudiante
-        {
-            "$lookup": {
-                "from": "estudiante",
-                "localField": "estudiante",
-                "foreignField": "_id",
-                "as": "estudiante_info"
-            }
-        },
-        {"$unwind": "$estudiante_info"},
-        {
-            "$match": {
-                "estudiante_info.nombreInstitucion": nombre_institucion
-            }
-        },
-        # Lookup para obtener detalles del curso
-        {
-            "$lookup": {
-                "from": "curso",
-                "localField": "estudiante_info.cursoEstudianteId",
-                "foreignField": "_id",
-                "as": "curso_info"
-            }
-        },
-        {"$unwind": "$curso_info"},
-        # Lookup para obtener detalles del cronograma base
-        {
-            "$lookup": {
-                "from": "cronogramabase",
-                "localField": "detalles_cobro.cronograma_curso_id",
-                "foreignField": "_id",
-                "as": "cronograma_info"
-            }
-        },
-        {"$unwind": "$cronograma_info"},
-        # Proyecto final para devolver la estructura requerida
-        {
-            "$project": {
-                "monto_recibo": {"$toDouble": "$nmonto"},
-                "mes": "$detalles_cobro.mes",
-                "valor_detalle": {"$toDouble": "$detalles_cobro.valor"},
-                "estudiante_id": {"$toString": "$estudiante_info._id"},
-                "nombre_estudiante": "$estudiante_info.nombreEstudiante",
-                "nombre_grado": "$curso_info.grado",
-                "nombre_institucion": nombre_institucion,
-                "nombre_concepto": "$cronograma_info.nombre",
-                "codigo": "$cronograma_info.codigo"
-            }
-        }
-    ])
+    processed_rows = []
 
-    # Convertir los resultados a una lista de diccionarios
-    return list(resultados)
+    # Obtener una lista de IDs de recibos ya pagados
+    recibos_pagados_ids = ReciboPago.objects.distinct("recibo_cobro")
 
+    for cronograma in cronogramas:
+        # Filtrar los detalles del cronograma para el mes especificado
+        detalles_mes = [detalle for detalle in cronograma.detalle_cobro if detalle.mes == mes]
+        for detalle_cobro in detalles_mes:
+            # Buscar los recibos de cobro relacionados con este detalle
+            recibos = ReciboCobro.objects.filter(
+                detalles_cobro__id=detalle_cobro.id,
+                id__nin=recibos_pagados_ids  # Excluir recibos ya pagados
+            ).only("nmonto", "detalles_cobro", "estudiante")
+
+            for recibo in recibos:
+                # Obtener el objeto Estudiante relacionado
+                estudiante = Estudiante.objects.get(id=recibo.estudiante.id)
+
+                # Filtrar por institución del estudiante
+                if estudiante.nombreInstitucion != nombre_institucion:
+                    continue
+
+                # Obtener el curso del estudiante
+                curso = Curso.objects.get(id=estudiante.cursoEstudianteId)
+
+                # Procesar los datos para la salida
+                processed_rows.append({
+                    "monto_recibo": float(recibo.nmonto),
+                    "mes": detalle_cobro.mes,
+                    "valor_detalle": float(detalle_cobro.valor),
+                    "estudiante_id": str(estudiante.id),
+                    "nombre_estudiante": estudiante.nombreEstudiante,
+                    "nombre_grado": curso.grado,
+                    "nombre_institucion": nombre_institucion,
+                    "nombre_concepto": cronograma.nombre,
+                    "codigo": cronograma.codigo
+                })
+
+    return processed_rows
 
 
 def obtener_cartera_general(nombre_institucion, mes):
