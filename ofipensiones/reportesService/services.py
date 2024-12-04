@@ -101,7 +101,7 @@ def obtener_cuentas_por_cobrar(nombre_institucion, mes):
     resultados = db["recibo_cobro"].aggregate(pipeline)
 
     # Convertir a lista
-    return JsonResponse(list(resultados), safe=False)
+    return list(resultados)
 
 
 
