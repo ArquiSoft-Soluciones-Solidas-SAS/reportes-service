@@ -6,9 +6,6 @@ import django
 import sys
 from datetime import datetime
 
-from ofipensiones.reportesService.models import Institucion, Curso, Estudiante, CronogramaBase, DetalleCobroCurso, \
-    ReciboCobro, ReciboPago
-
 rabbit_host = '10.142.0.12'
 rabbit_user = 'microservicios_user'
 rabbit_password = 'password'
@@ -30,6 +27,8 @@ environ.setdefault('DJANGO_SETTINGS_MODULE', 'ofipensiones.settings')
 
 django.setup()
 
+from reportesService.models import Institucion, Curso, Estudiante, CronogramaBase, DetalleCobroCurso, \
+    ReciboCobro, ReciboPago
 
 # Callback genérico para recibir y procesar mensajes
 def callback(ch, method, properties, body):
