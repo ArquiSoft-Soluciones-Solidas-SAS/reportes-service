@@ -1,4 +1,3 @@
-from ..reportesService.models import Institucion, Curso
 import json
 import pika
 from sys import path
