@@ -67,7 +67,9 @@ def obtener_cuentas_por_cobrar(nombre_institucion, mes):
                 "pipeline": [
                     {
                         "$match": {
-                            "$expr": {"$in": ["$$detalleId", "$detalle_cobro._id"]}
+                            "$expr": {
+                                "$in": ["$$detalleId", "$detalle_cobro._id"]
+                                }
                         }
                     }
                 ],
@@ -77,17 +79,21 @@ def obtener_cuentas_por_cobrar(nombre_institucion, mes):
         {"$unwind": "$cronograma"},
         {
             "$project": {
-                "monto_recibo": {"$toDouble": "$nmonto"},
+                "monto_recibo": "$nmonto",
                 "mes": "$detalles_cobro.mes",
-                "valor_detalle": {"$toDouble": "$detalles_cobro.valor"},
-                "estudiante_id": {"$toString": "$estudiante._id"},
+                "valor_detalle": "$detalles_cobro.valor",
+                "estudiante_id": "$estudiante._id",
                 "nombre_estudiante": "$estudiante.nombreEstudiante",
                 "nombre_grado": "$cronograma.grado",
                 "nombre_institucion": "$institucion.nombreInstitucion",
                 "nombre_concepto": "$cronograma.nombre",
                 "codigo": "$cronograma.codigo"
             }
+        },
+        {
+        "$limit": 5
         }
+
     ]
     print("Pipeline: ", pipeline)
 
