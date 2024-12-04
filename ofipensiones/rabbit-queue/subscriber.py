@@ -99,8 +99,8 @@ def callback(ch, method, properties, body):
                     id=detalle.get("id"),
                     mes=detalle.get("mes"),
                     valor=detalle.get("valor"),
-                    fechaCausacion=detalle.get("fechaCausacion"),
-                    fechaLimite=detalle.get("fechaLimite"),
+                    fechaCausacion=datetime.fromisoformat(detalle.get("fechaCausacion")),
+                    fechaLimite=datetime.fromisoformat(detalle.get("fechaLimite")),
                     frecuencia=detalle.get("frecuencia")
                 ) for detalle in recibo_data.get("detalles_cobro")
             ],
@@ -125,8 +125,8 @@ def callback(ch, method, properties, body):
                         id=detalle.get("id"),
                         mes=detalle.get("mes"),
                         valor=detalle.get("valor"),
-                        fechaCausacion=detalle.get("fechaCausacion"),
-                        fechaLimite=detalle.get("fechaLimite"),
+                        fechaCausacion=datetime.fromisoformat(detalle.get("fechaCausacion")),
+                        fechaLimite=datetime.fromisoformat(detalle.get("fechaLimite")),
                         frecuencia=detalle.get("frecuencia")
                     ) for detalle in recibo_pago_data.get("recibo_cobro").get("detalles_cobro")
                 ]
