@@ -15,6 +15,9 @@ from mongoengine.queryset.visitor import Q
 from django.http import JsonResponse
 from django.db.models import Q
 
+from django.http import JsonResponse
+from django.db.models import Q
+
 def obtener_cuentas_por_cobrar(nombre_institucion, mes):
     """
     Obtiene las cuentas por cobrar para una institución en un mes específico.
@@ -40,9 +43,12 @@ def obtener_cuentas_por_cobrar(nombre_institucion, mes):
         ).only("id", "nmonto", "detalles_cobro", "estudiante")
 
         # Identificar los recibos que ya tienen pagos asociados
-        recibos_pagados_ids = ReciboPago.objects.filter(
+        recibos_pagados = ReciboPago.objects.filter(
             recibo_cobro__in=recibos
-        ).values_list("recibo_cobro_id", flat=True)
+        )
+
+        # Extraer los IDs de los recibos pagados
+        recibos_pagados_ids = [recibo.recibo_cobro.id for recibo in recibos_pagados]
 
         # Filtrar los recibos que aún no han sido pagados
         recibos_no_pagados = recibos.exclude(id__in=recibos_pagados_ids)
@@ -74,6 +80,7 @@ def obtener_cuentas_por_cobrar(nombre_institucion, mes):
     except Exception as e:
         print(f"Error al obtener cuentas por cobrar: {e}")
         return JsonResponse({"error": str(e)}, status=500)
+
 
 
 
