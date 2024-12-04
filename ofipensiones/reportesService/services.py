@@ -35,12 +35,12 @@ def obtener_cuentas_por_cobrar(nombre_institucion, mes):
         # Filtrar estudiantes de la institución
         estudiantes = Estudiante.objects.filter(
             nombreInstitucion=nombre_institucion
-        ).only("id", "cursoEstudianteId", "nombreEstudiante")
+        ).only("id")
         print("Estudiantes: ", estudiantes)
 
         # Filtrar recibos de cobro asociados a los estudiantes y al mes
         recibos = ReciboCobro.objects.filter(
-            estudiante__in=estudiantes.id,
+            estudiante__in=estudiantes,
             detalles_cobro__mes=mes
         ).only("id", "nmonto", "detalles_cobro", "estudiante")
         print("Recibos: ", recibos)
