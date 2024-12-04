@@ -53,18 +53,13 @@ def callback(ch, method, properties, body):
     elif method.exchange == 'estudiantes' and method.routing_key == 'estudiante.created':
         # Guardar en la base de datos Estudiante
         estudiante_data = message.get("data")
-        Estudiante.objects.update_one(
-            {"id": estudiante_data.get("id")},  # Filtro para identificar el documento
-            {
-                "$set": {
-                    "nombreEstudiante": estudiante_data.get("nombreEstudiante"),
-                    "codigoEstudiante": estudiante_data.get("codigoEstudiante"),
-                    "institucionEstudianteId": estudiante_data.get("institucionEstudianteId"),
-                    "nombreInstitucion": estudiante_data.get("nombreInstitucion"),
-                    "cursoEstudianteId": estudiante_data.get("cursoEstudianteId"),
-                }
-            },
-            upsert=True  # Inserta si no existe
+        Estudiante.objects(id=estudiante_data.get("id")).update(
+            set__nombreEstudiante=estudiante_data.get("nombreEstudiante"),
+            set__codigoEstudiante=estudiante_data.get("codigoEstudiante"),
+            set__institucionEstudianteId=estudiante_data.get("institucionEstudianteId"),
+            set__nombreInstitucion=estudiante_data.get("nombreInstitucion"),
+            set__cursoEstudianteId=estudiante_data.get("cursoEstudianteId"),
+            upsert=True
         )
 
 
