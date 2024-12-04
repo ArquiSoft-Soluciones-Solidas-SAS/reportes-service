@@ -30,5 +30,4 @@ def generar_reporte(request, nombre_institucion, mes):
             print(f"Error al obtener cuentas por cobrar: {e}")
             cuentas_por_cobrar = []
 
-    #return render(request, 'listar.html', {'cuentas_por_cobrar': cuentas_por_cobrar})
-    return cuentas_por_cobrar
+    return render(request, 'listar.html', {'cuentas_por_cobrar': cuentas_por_cobrar})

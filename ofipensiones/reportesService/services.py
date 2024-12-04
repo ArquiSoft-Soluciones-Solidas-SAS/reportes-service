@@ -1,6 +1,7 @@
 from django.db.models import Q
 from datetime import date, timedelta
 
+from django.http import JsonResponse
 from pymongo import MongoClient
 
 from .models import Curso, DetalleCobroCurso, ReciboCobro, ReciboPago, Institucion, Estudiante, CronogramaBase
@@ -79,10 +80,10 @@ def obtener_cuentas_por_cobrar(nombre_institucion, mes):
         {"$unwind": "$cronograma"},
         {
             "$project": {
-                "monto_recibo": "$nmonto",
+                "monto_recibo": {"$nmonto"},
                 "mes": "$detalles_cobro.mes",
-                "valor_detalle": "$detalles_cobro.valor",
-                "estudiante_id": "$estudiante._id",
+                "valor_detalle": {"$toDouble": "$detalles_cobro.valor"},
+                "estudiante_id": {"$toString": "$estudiante._id"},
                 "nombre_estudiante": "$estudiante.nombreEstudiante",
                 "nombre_grado": "$cronograma.grado",
                 "nombre_institucion": "$institucion.nombreInstitucion",
@@ -92,8 +93,7 @@ def obtener_cuentas_por_cobrar(nombre_institucion, mes):
         },
         {
         "$limit": 5
-        }
-
+        } 
     ]
     print("Pipeline: ", pipeline)
 
@@ -101,7 +101,7 @@ def obtener_cuentas_por_cobrar(nombre_institucion, mes):
     resultados = db["recibo_cobro"].aggregate(pipeline)
 
     # Convertir a lista
-    return list(resultados)
+    return JsonResponse(list(resultados), safe=False)
 
 
 
