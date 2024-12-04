@@ -80,7 +80,7 @@ def obtener_cuentas_por_cobrar(nombre_institucion, mes):
         {"$unwind": "$cronograma"},
         {
             "$project": {
-                "monto_recibo": {"$nmonto"},
+                "monto_recibo": {"$toDouble": "$nmonto"},
                 "mes": "$detalles_cobro.mes",
                 "valor_detalle": {"$toDouble": "$detalles_cobro.valor"},
                 "estudiante_id": {"$toString": "$estudiante._id"},
