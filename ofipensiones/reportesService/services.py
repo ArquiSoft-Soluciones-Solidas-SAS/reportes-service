@@ -7,55 +7,55 @@ from django.db import connection
 
 from mongoengine.queryset.visitor import Q
 
+from django.http import JsonResponse
+from decimal import Decimal
+from mongoengine.queryset.visitor import Q
 
-def obtener_cuentas_por_cobrar(nombre_institucion, mes):
-    print("Hit the DB")
 
-    # Filtrar los cronogramas base de la institución
-    cronogramas = CronogramaBase.objects.filter(
-        nombreInstitucion=nombre_institucion
-    ).only("id", "detalle_cobro", "nombre", "codigo")
+def obtener_cuentas_por_cobrar(request, nombre_institucion, mes):
+    try:
+        # Obtener los recibos de cobro no pagados
+        recibos_pagados_ids = ReciboPago.objects.distinct("recibo_cobro")
 
-    processed_rows = []
+        recibos = ReciboCobro.objects.filter(
+            Q(detalles_cobro__mes=mes) &
+            Q(id__nin=recibos_pagados_ids)
+        )
 
-    # Obtener una lista de IDs de recibos ya pagados
-    recibos_pagados_ids = ReciboPago.objects.distinct("recibo_cobro")
+        processed_rows = []
 
-    for cronograma in cronogramas:
-        # Filtrar los detalles del cronograma para el mes especificado
-        detalles_mes = [detalle for detalle in cronograma.detalle_cobro if detalle.mes == mes]
-        for detalle_cobro in detalles_mes:
-            # Buscar los recibos de cobro relacionados con este detalle
-            recibos = ReciboCobro.objects.filter(
-                detalles_cobro__id=detalle_cobro.id,
-                id__nin=recibos_pagados_ids  # Excluir recibos ya pagados
-            ).only("nmonto", "detalles_cobro", "estudiante")
+        for recibo in recibos:
+            # Obtener el estudiante relacionado
+            estudiante = Estudiante.objects.get(id=recibo.estudiante)
 
-            for recibo in recibos:
-                # Obtener el objeto Estudiante relacionado
-                estudiante = Estudiante.objects.get(id=recibo.estudiante.id)
+            # Validar institución
+            if estudiante.nombreInstitucion != nombre_institucion:
+                continue
 
-                # Filtrar por institución del estudiante
-                if estudiante.nombreInstitucion != nombre_institucion:
-                    continue
+            # Obtener el curso relacionado
+            curso = Curso.objects.get(id=estudiante.cursoEstudianteId)
 
-                # Obtener el curso del estudiante
-                curso = Curso.objects.get(id=estudiante.cursoEstudianteId)
+            # Obtener el cronograma relacionado
+            for detalle in recibo.detalles_cobro:
+                if detalle.mes == mes:
+                    cronograma = CronogramaBase.objects.get(detalle_cobro__id=detalle.id)
 
-                # Procesar los datos para la salida
-                processed_rows.append({
-                    "monto_recibo": float(recibo.nmonto),
-                    "mes": detalle_cobro.mes,
-                    "valor_detalle": float(detalle_cobro.valor),
-                    "estudiante_id": str(estudiante.id),
-                    "nombre_estudiante": estudiante.nombreEstudiante,
-                    "nombre_grado": curso.grado,
-                    "nombre_institucion": nombre_institucion,
-                    "nombre_concepto": cronograma.nombre,
-                    "codigo": cronograma.codigo
-                })
+                    processed_rows.append({
+                        "monto_recibo": float(recibo.nmonto),
+                        "mes": detalle.mes,
+                        "valor_detalle": float(detalle.valor),
+                        "estudiante_id": str(estudiante.id),
+                        "nombre_estudiante": estudiante.nombreEstudiante,
+                        "nombre_grado": curso.grado,
+                        "nombre_institucion": nombre_institucion,
+                        "nombre_concepto": cronograma.nombre,
+                        "codigo": cronograma.codigo
+                    })
 
-    return processed_rows
+        return JsonResponse(processed_rows, safe=False)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 def obtener_cartera_general(nombre_institucion, mes):
