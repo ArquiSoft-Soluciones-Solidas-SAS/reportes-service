@@ -1,7 +1,7 @@
 from django.db.models import Q
 from datetime import date, timedelta
 
-from models import Curso, DetalleCobroCurso, ReciboCobro, ReciboPago, Institucion, Estudiante, CronogramaBase
+from .models import Curso, DetalleCobroCurso, ReciboCobro, ReciboPago, Institucion, Estudiante, CronogramaBase
 
 from django.db import connection
 
