@@ -18,11 +18,13 @@ def obtener_cuentas_por_cobrar(nombre_institucion, mes):
     try:
         # Obtener los recibos de cobro no pagados
         recibos_pagados_ids = ReciboPago.objects.distinct("recibo_cobro")
+        print("Recibos pagados: ", recibos_pagados_ids)
 
         recibos = ReciboCobro.objects.filter(
             Q(detalles_cobro__mes=mes) &
             Q(id__nin=recibos_pagados_ids)
         )
+        print("Recibos: ", recibos)
 
         processed_rows = []
 
@@ -53,6 +55,11 @@ def obtener_cuentas_por_cobrar(nombre_institucion, mes):
                         "nombre_concepto": cronograma.nombre,
                         "codigo": cronograma.codigo
                     })
+
+        return JsonResponse(processed_rows, safe=False)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
 
         return JsonResponse(processed_rows, safe=False)
 
