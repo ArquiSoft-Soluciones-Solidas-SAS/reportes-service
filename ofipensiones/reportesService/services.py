@@ -85,10 +85,10 @@ def obtener_cuentas_por_cobrar(nombre_institucion, mes):
     ]
 
     # Ejecutar el pipeline
-    resultados = db["recibo_cobro"].aggregate(pipeline)
-    r.set(key, json.dumps(list(resultados)), ex=60 * 60 * 24)
+    cursor_resultados = db["recibo_cobro"].aggregate(pipeline)
+    resultados = list(cursor_resultados)  # Convertir el cursor a lista
 
-    #de los resultados, solo se necesitan aquellos con el mes solicitado
+    # Filtrar resultados por mes
     processed_rows = [
         {
             "monto_recibo": row["monto_recibo"],
@@ -103,6 +103,10 @@ def obtener_cuentas_por_cobrar(nombre_institucion, mes):
         }
         for row in resultados if row["mes"] == mes
     ]
+
+    # Guardar en Redis si hay resultados
+    if processed_rows:
+        r.set(key, json.dumps(processed_rows), ex=60 * 60 * 24)
 
     return processed_rows
 
