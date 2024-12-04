@@ -1,8 +1,13 @@
 from .models import Curso, DetalleCobroCurso, ReciboCobro, ReciboPago, Institucion, Estudiante, CronogramaBase
 from pymongo import MongoClient
+import redis
+import json
 
 def obtener_cuentas_por_cobrar(nombre_institucion, mes):
     print("Ejecutando consulta...")
+    key = f"cuentas_por_cobrar:{nombre_institucion}:{mes}"
+    print(f"Key: {key}")
+    r = redis.StrictRedis(host='10.128.0.88', port=6379, db=0)
 
     # Conexión a la base de datos
     client = MongoClient('mongodb://microservicios_user:password@10.128.0.87:27017')
@@ -78,10 +83,10 @@ def obtener_cuentas_por_cobrar(nombre_institucion, mes):
             }
         }
     ]
-    print("Pipeline: ", pipeline)
 
     # Ejecutar el pipeline
     resultados = db["recibo_cobro"].aggregate(pipeline)
+    r.set(key, json.dumps(resultados), ex=60 * 60 * 24)
 
     #de los resultados, solo se necesitan aquellos con el mes solicitado
     processed_rows = [

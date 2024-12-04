@@ -1,17 +1,16 @@
 from django.http import JsonResponse
 from django.shortcuts import render
 from .services import obtener_cuentas_por_cobrar, obtener_cartera_general
-#import redis
+import redis
 import json
 
 
 def generar_reporte(request, nombre_institucion, mes):
-    key = f"cuentas_por_cobrar:{nombre_institucion}:{mes}"
+    key = f"cuentas_por_cobrar:{nombre_institucion.replace('_', ' ')}:{mes}"
     print(f"Key: {key}")
 
-    # r = redis.StrictRedis(host='10.128.0.5', port=6379, db=0)
-    # cuentas_por_cobrar = r.get(key)
-    cuentas_por_cobrar = None
+    r = redis.StrictRedis(host='10.128.0.88', port=6379, db=0)
+    cuentas_por_cobrar = r.get(key)
 
     if cuentas_por_cobrar is not None:
         cuentas_por_cobrar = json.loads(cuentas_por_cobrar.decode('utf-8'))
