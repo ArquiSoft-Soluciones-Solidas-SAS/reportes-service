@@ -2,7 +2,7 @@ import json
 import pika
 from sys import path
 from os import environ
-import django
+#import django
 
 rabbit_host = '10.142.0.12'
 rabbit_user = 'microservicios_user'
@@ -10,9 +10,9 @@ rabbit_password = 'password'
 exchange = 'instituciones'
 topics = ['institucion.#']
 
-path.append('../ofipensiones/settings.py')
-environ.setdefault('DJANGO_SETTINGS_MODULE', 'ofipensiones.settings')
-django.setup()
+# path.append('../ofipensiones/settings.py')
+# environ.setdefault('DJANGO_SETTINGS_MODULE', 'ofipensiones.settings')
+# django.setup()
 
 
 def callback(ch, method, properties, body):
