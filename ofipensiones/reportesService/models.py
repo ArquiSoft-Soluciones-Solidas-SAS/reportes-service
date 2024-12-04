@@ -58,7 +58,7 @@ class ReciboCobro(Document):
     fecha = fields.DateTimeField()
     nmonto = fields.DecimalField(max_digits=10, decimal_places=2)
     detalle = fields.StringField(max_length=255)
-    estudiante = fields.ReferenceField(Estudiante)
+    estudiante = fields.ObjectIdField(editable=False)
     detalles_cobro = fields.ListField(fields.EmbeddedDocumentField(DetalleCobroCurso))
 
     def calcular_monto_total(self):
