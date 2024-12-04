@@ -56,7 +56,7 @@ def obtener_cuentas_por_cobrar(nombre_institucion, mes):
         processed_rows = []
 
         for recibo in recibos_no_pagados:
-            estudiante = Estudiante.objects.get(id=recibo.estudiante.id)
+            estudiante = Estudiante.objects.get(id=recibo.estudiante)
             curso = Curso.objects.get(id=estudiante.cursoEstudianteId)
 
             for detalle in recibo.detalles_cobro:
