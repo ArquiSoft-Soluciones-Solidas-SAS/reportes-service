@@ -19,74 +19,75 @@ def obtener_cuentas_por_cobrar(nombre_institucion, mes):
 
     client = MongoClient('mongodb://microservicios_user:password@10.128.0.87:27017')
     db = client['reportes-query-service']
-
-    resultados = db["recibo_cobro"].aggregate([
-        {
-            "$lookup": {
-                "from": "recibo_pago",
-                "localField": "_id",
-                "foreignField": "recibo_cobro",
-                "as": "pagos"
-            }
-        },
-        {
-            "$match": {
-                "pagos": {"$size": 0}
-            }
-        },
-        {
-            "$lookup": {
-                "from": "estudiante",
-                "localField": "estudiante",
-                "foreignField": "_id",
-                "as": "estudiante"
-            }
-        },
-        {"$unwind": "$estudiante"},
-        {
-            "$lookup": {
-                "from": "institucion",
-                "localField": "estudiante.institucionEstudianteId",
-                "foreignField": "_id",
-                "as": "institucion"
-            }
-        },
-        {"$unwind": "$institucion"},
-        {
-            "$match": {
-                "institucion.nombreInstitucion": nombre_institucion
-            }
-        },
-        {"$unwind": "$detalles_cobro"},
-        {
-            "$lookup": {
-                "from": "cronograma_base",
-                "let": {"detalleId": "$detalles_cobro._id"},
-                "pipeline": [
-                    {
-                        "$match": {
-                            "$expr": {"$in": ["$$detalleId", "$detalle_cobro._id"]}
-                        }
-                    }
-                ],
-                "as": "cronograma"
-            }
-        },
-        {"$unwind": "$cronograma"},
-        {
-            "$project": {
-                "monto_recibo": {"$toDouble": "$nmonto"},
-                "mes": "$detalles_cobro.mes",
-                "valor_detalle": {"$toDouble": "$detalles_cobro.valor"},
-                "estudiante_id": {"$toString": "$estudiante._id"},
-                "nombre_estudiante": "$estudiante.nombreEstudiante",
-                "nombre_grado": "$cronograma.grado",
-                "nombre_institucion": "$institucion.nombreInstitucion",
-                "nombre_concepto": "$cronograma.nombre",
-                "codigo": "$cronograma.codigo"
-            }
-        }
-    ])
+    print("Connected to MongoDB")
+    print(db["recibo_cobro"].find_one())
+    # resultados = db["recibo_cobro"].aggregate([
+    #     {
+    #         "$lookup": {
+    #             "from": "recibo_pago",
+    #             "localField": "_id",
+    #             "foreignField": "recibo_cobro",
+    #             "as": "pagos"
+    #         }
+    #     },
+    #     {
+    #         "$match": {
+    #             "pagos": {"$size": 0}
+    #         }
+    #     },
+    #     {
+    #         "$lookup": {
+    #             "from": "estudiante",
+    #             "localField": "estudiante",
+    #             "foreignField": "_id",
+    #             "as": "estudiante"
+    #         }
+    #     },
+    #     {"$unwind": "$estudiante"},
+    #     {
+    #         "$lookup": {
+    #             "from": "institucion",
+    #             "localField": "estudiante.institucionEstudianteId",
+    #             "foreignField": "_id",
+    #             "as": "institucion"
+    #         }
+    #     },
+    #     {"$unwind": "$institucion"},
+    #     {
+    #         "$match": {
+    #             "institucion.nombreInstitucion": nombre_institucion
+    #         }
+    #     },
+    #     {"$unwind": "$detalles_cobro"},
+    #     {
+    #         "$lookup": {
+    #             "from": "cronograma_base",
+    #             "let": {"detalleId": "$detalles_cobro._id"},
+    #             "pipeline": [
+    #                 {
+    #                     "$match": {
+    #                         "$expr": {"$in": ["$$detalleId", "$detalle_cobro._id"]}
+    #                     }
+    #                 }
+    #             ],
+    #             "as": "cronograma"
+    #         }
+    #     },
+    #     {"$unwind": "$cronograma"},
+    #     {
+    #         "$project": {
+    #             "monto_recibo": {"$toDouble": "$nmonto"},
+    #             "mes": "$detalles_cobro.mes",
+    #             "valor_detalle": {"$toDouble": "$detalles_cobro.valor"},
+    #             "estudiante_id": {"$toString": "$estudiante._id"},
+    #             "nombre_estudiante": "$estudiante.nombreEstudiante",
+    #             "nombre_grado": "$cronograma.grado",
+    #             "nombre_institucion": "$institucion.nombreInstitucion",
+    #             "nombre_concepto": "$cronograma.nombre",
+    #             "codigo": "$cronograma.codigo"
+    #         }
+    #     }
+    # ])
 
     return list(resultados)
 
