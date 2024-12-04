@@ -1,4 +1,3 @@
-import mongoengine
 from django.db.models import Q
 from datetime import date, timedelta
 
@@ -14,13 +13,82 @@ from mongoengine.queryset.visitor import Q
 from pymongo import MongoClient
 
 def obtener_cuentas_por_cobrar(nombre_institucion, mes):
+    from pymongo import MongoClient
+
     print("Hit the DB")
 
-    # Conexión a la base de datos de MongoDB
-    db = mongoengine.get_db()
-    # Conexión a la colección de MongoDB
-    collection = db["recibos_cobro"]
-    print(collection)
+    client = MongoClient('mongodb://microservicios_user:password@10.128.0.87:27017')
+    db = client['reportes-query-service']
+
+    resultados = db["recibo_cobro"].aggregate([
+        {
+            "$lookup": {
+                "from": "recibo_pago",
+                "localField": "_id",
+                "foreignField": "recibo_cobro",
+                "as": "pagos"
+            }
+        },
+        {
+            "$match": {
+                "pagos": {"$size": 0}
+            }
+        },
+        {
+            "$lookup": {
+                "from": "estudiante",
+                "localField": "estudiante",
+                "foreignField": "_id",
+                "as": "estudiante"
+            }
+        },
+        {"$unwind": "$estudiante"},
+        {
+            "$lookup": {
+                "from": "institucion",
+                "localField": "estudiante.institucionEstudianteId",
+                "foreignField": "_id",
+                "as": "institucion"
+            }
+        },
+        {"$unwind": "$institucion"},
+        {
+            "$match": {
+                "institucion.nombreInstitucion": nombre_institucion
+            }
+        },
+        {"$unwind": "$detalles_cobro"},
+        {
+            "$lookup": {
+                "from": "cronograma_base",
+                "let": {"detalleId": "$detalles_cobro._id"},
+                "pipeline": [
+                    {
+                        "$match": {
+                            "$expr": {"$in": ["$$detalleId", "$detalle_cobro._id"]}
+                        }
+                    }
+                ],
+                "as": "cronograma"
+            }
+        },
+        {"$unwind": "$cronograma"},
+        {
+            "$project": {
+                "monto_recibo": {"$toDouble": "$nmonto"},
+                "mes": "$detalles_cobro.mes",
+                "valor_detalle": {"$toDouble": "$detalles_cobro.valor"},
+                "estudiante_id": {"$toString": "$estudiante._id"},
+                "nombre_estudiante": "$estudiante.nombreEstudiante",
+                "nombre_grado": "$cronograma.grado",
+                "nombre_institucion": "$institucion.nombreInstitucion",
+                "nombre_concepto": "$cronograma.nombre",
+                "codigo": "$cronograma.codigo"
+            }
+        }
+    ])
+
+    return list(resultados)
 
 def obtener_cartera_general(nombre_institucion, mes):
     print("Hit the DB")
