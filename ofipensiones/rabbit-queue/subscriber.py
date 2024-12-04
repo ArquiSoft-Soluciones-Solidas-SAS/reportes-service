@@ -66,90 +66,71 @@ def callback(ch, method, properties, body):
     elif method.exchange == 'cronogramas' and method.routing_key == 'cronograma.created':
         # Guardar en la base de datos CronogramaBase
         cronograma_data = message.get("data")
-        CronogramaBase.objects.update_one(
-            {"id": cronograma_data.get("id")},
-            {
-                "$set": {
-                    "institucionId": cronograma_data.get("institucionId"),
-                    "nombreInstitucion": cronograma_data.get("nombreInstitucion"),
-                    "cursoId": cronograma_data.get("cursoId"),
-                    "grado": cronograma_data.get("grado"),
-                    "codigo": cronograma_data.get("codigo"),
-                    "nombre": cronograma_data.get("nombre"),
-                    "detalle_cobro": [
-                        {
-                            "id": detalle.get("id"),
-                            "mes": detalle.get("mes"),
-                            "valor": detalle.get("valor"),
-                            "fechaCausacion": detalle.get("fechaCausacion"),
-                            "fechaLimite": detalle.get("fechaLimite"),
-                            "frecuencia": detalle.get("frecuencia"),
-                        }
-                        for detalle in cronograma_data.get("detalle_cobro")
-                    ],
-                }
-            },
+        CronogramaBase.objects(id=cronograma_data.get("id")).update(
+            set__institucionId=cronograma_data.get("institucionId"),
+            set__nombreInstitucion=cronograma_data.get("nombreInstitucion"),
+            set__cursoId=cronograma_data.get("cursoId"),
+            set__grado=cronograma_data.get("grado"),
+            set__codigo=cronograma_data.get("codigo"),
+            set__nombre=cronograma_data.get("nombre"),
+            set__detalle_cobro=[
+                DetalleCobroCurso(
+                    id=detalle.get("id"),
+                    mes=detalle.get("mes"),
+                    valor=detalle.get("valor"),
+                    fechaCausacion=detalle.get("fechaCausacion"),
+                    fechaLimite=detalle.get("fechaLimite"),
+                    frecuencia=detalle.get("frecuencia")
+                ) for detalle in cronograma_data.get("detalle_cobro")
+            ],
             upsert=True
         )
 
     elif method.exchange == 'recibos_cobro' and method.routing_key == 'recibo.cobro.created':
         # Guardar en la base de datos ReciboCobro
         recibo_data = message.get("data")
-        ReciboCobro.objects.update_one(
-            {"id": recibo_data.get("id")},
-            {
-                "$set": {
-                    "fecha": recibo_data.get("fecha"),
-                    "nmonto": recibo_data.get("nmonto"),
-                    "detalle": recibo_data.get("detalle"),
-                    "estudianteId": recibo_data.get("estudianteId"),
-                    "detalles_cobro": [
-                        {
-                            "id": detalle.get("id"),
-                            "mes": detalle.get("mes"),
-                            "valor": detalle.get("valor"),
-                            "fechaCausacion": detalle.get("fechaCausacion"),
-                            "fechaLimite": detalle.get("fechaLimite"),
-                            "frecuencia": detalle.get("frecuencia"),
-                        }
-                        for detalle in recibo_data.get("detalles_cobro")
-                    ],
-                }
-            },
+        ReciboCobro.objects(id=recibo_data.get("id")).update(
+            set__fecha=recibo_data.get("fecha"),
+            set__nmonto=recibo_data.get("nmonto"),
+            set__detalle=recibo_data.get("detalle"),
+            set__estudianteId=recibo_data.get("estudianteId"),
+            set__detalles_cobro=[
+                DetalleCobroCurso(
+                    id=detalle.get("id"),
+                    mes=detalle.get("mes"),
+                    valor=detalle.get("valor"),
+                    fechaCausacion=detalle.get("fechaCausacion"),
+                    fechaLimite=detalle.get("fechaLimite"),
+                    frecuencia=detalle.get("frecuencia")
+                ) for detalle in recibo_data.get("detalles_cobro")
+            ],
             upsert=True
         )
-
 
     elif method.exchange == 'recibos_pago' and method.routing_key == 'recibo.pago.created':
         # Guardar en la base de datos ReciboPago
         recibo_pago_data = message.get("data")
-        ReciboPago.objects.update_one(
-            {"id": recibo_pago_data.get("id")},
-            {
-                "$set": {
-                    "fecha": recibo_pago_data.get("fecha"),
-                    "nmonto": recibo_pago_data.get("nmonto"),
-                    "detalle": recibo_pago_data.get("detalle"),
-                    "recibo_cobro": {
-                        "id": recibo_pago_data.get("recibo_cobro").get("id"),
-                        "fecha": recibo_pago_data.get("recibo_cobro").get("fecha"),
-                        "nmonto": recibo_pago_data.get("recibo_cobro").get("nmonto"),
-                        "detalle": recibo_pago_data.get("recibo_cobro").get("detalle"),
-                        "estudianteId": recibo_pago_data.get("recibo_cobro").get("estudianteId"),
-                        "detalles_cobro": [
-                            {
-                                "id": detalle.get("id"),
-                                "mes": detalle.get("mes"),
-                                "valor": detalle.get("valor"),
-                                "fechaCausacion": detalle.get("fechaCausacion"),
-                                "fechaLimite": detalle.get("fechaLimite"),
-                                "frecuencia": detalle.get("frecuencia"),
-                            }
-                            for detalle in recibo_pago_data.get("recibo_cobro").get("detalles_cobro")
-                        ],
-                    }
-                }
-            },
+        ReciboPago.objects(id=recibo_pago_data.get("id")).update(
+            set__fecha=recibo_pago_data.get("fecha"),
+            set__nmonto=recibo_pago_data.get("nmonto"),
+            set__detalle=recibo_pago_data.get("detalle"),
+            set__recibo_cobro=ReciboCobro(
+                id=recibo_pago_data.get("recibo_cobro").get("id"),
+                fecha=recibo_pago_data.get("recibo_cobro").get("fecha"),
+                nmonto=recibo_pago_data.get("recibo_cobro").get("nmonto"),
+                detalle=recibo_pago_data.get("recibo_cobro").get("detalle"),
+                estudianteId=recibo_pago_data.get("recibo_cobro").get("estudianteId"),
+                detalles_cobro=[
+                    DetalleCobroCurso(
+                        id=detalle.get("id"),
+                        mes=detalle.get("mes"),
+                        valor=detalle.get("valor"),
+                        fechaCausacion=detalle.get("fechaCausacion"),
+                        fechaLimite=detalle.get("fechaLimite"),
+                        frecuencia=detalle.get("frecuencia")
+                    ) for detalle in recibo_pago_data.get("recibo_cobro").get("detalles_cobro")
+                ]
+            ),
             upsert=True
         )
 
