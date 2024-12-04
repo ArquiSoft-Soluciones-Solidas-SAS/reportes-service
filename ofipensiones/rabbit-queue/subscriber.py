@@ -1,5 +1,3 @@
-from reportesService.models import Institucion, Curso, Estudiante, CronogramaBase, DetalleCobroCurso, \
-    ReciboCobro, ReciboPago
 import json
 import pika
 from sys import path
@@ -30,6 +28,8 @@ environ.setdefault('DJANGO_SETTINGS_MODULE', 'ofipensiones.settings')
 
 django.setup()
 
+from reportesService.models import Institucion, Curso, Estudiante, CronogramaBase, DetalleCobroCurso, \
+    ReciboCobro, ReciboPago
 
 # Callback genérico para recibir y procesar mensajes
 
