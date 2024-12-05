@@ -38,6 +38,7 @@ def getRole(request):
     user = request.user
     auth0user = user.social_auth.filter(provider="auth0")[0]
     accessToken = auth0user.extra_data['access_token']
+    print("token: ", accessToken)
     url = "https://dev-73advmhx411p43vz.us.auth0.com/userinfo"
     headers = {'authorization': 'Bearer ' + accessToken}
     resp = requests.get(url, headers=headers)
@@ -55,3 +56,4 @@ def getNickname(request):
     userinfo = resp.json()
     nickname = userinfo['nickname']
     return (nickname)
+
