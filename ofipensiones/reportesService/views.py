@@ -4,7 +4,7 @@ from .services import obtener_cuentas_por_cobrar, obtener_cartera_general
 import redis
 import json
 from django.contrib.auth.decorators import login_required
-from ofipensiones.ofipensiones.auth0backend import getRole, getNickname
+from ofipensiones.auth0backend import getRole, getNickname
 import requests
 
 @login_required
