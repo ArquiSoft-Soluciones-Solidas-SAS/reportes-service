@@ -147,6 +147,9 @@ CQRS = {
     'rabbit-queue': 'cqrs_replica',  # settings used only in replica
 }
 
+PATH_API_GATEWAY = "http://" + os.environ.get("KONG_HOST", "10.128.0.81") + ":" + os.environ.get("KONG_PORT", "8000")
+PATH_USUARIOS = PATH_API_GATEWAY + "/usuarios"
+
 LOGIN_URL = "/login/auth0"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "https://dev-73advmhx411p43vz.us.auth0.com/v2/logout?returnTo=http%3A%2F%2F35.196.182.237:8080"
