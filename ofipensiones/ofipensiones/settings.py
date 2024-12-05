@@ -75,12 +75,12 @@ WSGI_APPLICATION = 'ofipensiones.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 MONGODB_DATABASES = {
     "default": {
@@ -149,7 +149,7 @@ CQRS = {
 
 LOGIN_URL = "/login/auth0"
 LOGIN_REDIRECT_URL = "/"
-LOGOUT_REDIRECT_URL = "https://dev-73advmhx411p43vz.us.auth0.com/v2/logout?returnTo=http%3A%2F%2F34.46.225.197:8000"
+LOGOUT_REDIRECT_URL = "https://dev-73advmhx411p43vz.us.auth0.com/v2/logout?returnTo=http%3A%2F%2F35.196.182.237:8080"
 
 SOCIAL_AUTH_TRAILING_SLASH = False  # Remove end slash from routes
 SOCIAL_AUTH_AUTH0_DOMAIN = 'dev-73advmhx411p43vz.us.auth0.com'
@@ -164,6 +164,6 @@ SOCIAL_AUTH_AUTH0_SCOPE = [
 ]
 
 AUTHENTICATION_BACKENDS = {
-    'ofipensiones.auth0backend.Auth0',
+    'AppDjango.auth0backend.Auth0',
     'django.contrib.auth.backends.ModelBackend',
 }
