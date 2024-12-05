@@ -1,5 +1,7 @@
 from django.http import JsonResponse
 from django.shortcuts import render
+
+from .models import Institucion
 from .services import obtener_cuentas_por_cobrar, obtener_cartera_general
 import redis
 from django.conf import settings
@@ -63,3 +65,23 @@ def generar_reporte(request, nombre_institucion, mes):
 
     else:
         return JsonResponse({"message": "Unauthorized User"})
+
+def listar_instituciones(request):
+    instituciones = Institucion.objects.all()
+    resultado = []
+    for institucion in instituciones:
+        resultado.append({
+            "id": str(institucion.id),
+            "nombreInstitucion": institucion.nombreInstitucion,
+            "cursos": [
+                {
+                    "id": str(curso.id),
+                    "grado": curso.grado,
+                    "numero": curso.numero,
+                    "anio": curso.anio
+                }
+                for curso in institucion.cursos
+            ]
+        })
+    return JsonResponse({"instituciones": resultado})
+
